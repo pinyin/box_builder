@@ -1,7 +1,7 @@
 name: box_builder
 description: BoxBuilder
-version: 0.0.1
-homepage:
+version: 0.0.1-dev.1
+repository: https://github.com/pinyin/box_builder
 
 environment:
   sdk: '>=3.1.0-163.1.beta <4.0.0'

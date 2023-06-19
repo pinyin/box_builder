@@ -3,15 +3,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:quiver/collection.dart';
 
-extension ListIndexComparator on List<BoxChild> {
-  DiffDistanceToUser nearerToFarther() {
-    final wList = List.of(map((c) => c.widget));
-    return (a, b) {
-      return wList.indexOf(a) - wList.indexOf(b);
-    };
-  }
-}
-
 //  TODO support baselines & GlobalKey
 class BoxBuilder extends RenderObjectWidget {
   final BoxChildrenBuilder builder;
@@ -43,13 +34,24 @@ class BoxBuilder extends RenderObjectWidget {
   }
 }
 
-typedef BoxChildrenBuilder = Size Function(BuildContext context,
-    BoxConstraints constraints, BuildChild build, OrderByDistance order);
+extension ListIndexComparator on List<BoxChild> {
+  TopToBottom nearerToFarther() {
+    final wList = List.of(map((c) => c.widget));
+    return (a, b) {
+      return wList.indexOf(a) - wList.indexOf(b);
+    };
+  }
+}
+
+typedef BoxChildrenBuilder = Size Function(
+    BuildContext context,
+    BoxConstraints constraints,
+    BuildChild build,
+    void Function(TopToBottom compareDistanceToUser) order);
 
 typedef BuildChild = BoxChild Function(Widget widget);
-typedef OrderByDistance = void Function(DiffDistanceToUser diffDistance);
 
-typedef DiffDistanceToUser = num Function(Widget target, Widget base);
+typedef TopToBottom = num Function(Widget target, Widget base);
 
 class BoxChild {
   void layout(BoxConstraints constraints, {bool parentUsesSize = true}) {
@@ -96,7 +98,8 @@ const ensureFinite = BoxConstraints(maxHeight: 1e10, maxWidth: 1e10);
 
 // TODO support GlobalKey
 class BoxBuilderElement extends RenderObjectElement {
-  T updateChildrenCallback<T>(T Function(BuildChild, OrderByDistance) cb) {
+  T updateChildrenCallback<T>(
+      T Function(BuildChild, void Function(TopToBottom)) cb) {
     // prepareBuild
     {
       final emptyChildrenByKey = _oldChildren;
@@ -167,7 +170,7 @@ class BoxBuilderElement extends RenderObjectElement {
   }
 
   @protected
-  void reorderChildren(DiffDistanceToUser diff) {
+  void reorderChildren(TopToBottom diff) {
     _childComparator = (a, b) => -diff(a.widget, b.widget).sign.toInt();
     _childrenOrder.sort(_childComparator);
     renderObject.markNeedsPaint();
@@ -289,11 +292,6 @@ class RenderBoxBuilder extends RenderBox {
       context.paintChild(
           child, offset + (child.parentData as BoxParentData).offset);
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
