@@ -49,9 +49,9 @@ typedef BoxChildrenBuilder = Size Function(
     BuildChild build,
     void Function(TopToBottom compareDistanceToUser) order);
 
-typedef BuildChild = BoxChild Function(Widget widget);
+typedef BuildChild<T> = BoxChild Function(Widget widget);
 
-typedef TopToBottom = num Function(Widget target, Widget base);
+typedef TopToBottom = num Function(dynamic tagA, dynamic tagB);
 
 class BoxChild {
   void layout(BoxConstraints constraints, {bool parentUsesSize = true}) {
@@ -71,6 +71,8 @@ class BoxChild {
     _parent.markNeedsPaint();
     (_child.parentData as BoxParentData).offset = to;
   }
+
+  dynamic tag;
 
   Element get element => _element;
 
@@ -171,7 +173,7 @@ class BoxBuilderElement extends RenderObjectElement {
 
   @protected
   void reorderChildren(TopToBottom diff) {
-    _childComparator = (a, b) => -diff(a.widget, b.widget).sign.toInt();
+    _childComparator = (a, b) => -diff(a, b).sign.toInt();
     _childrenOrder.sort(_childComparator);
     renderObject.markNeedsPaint();
   }
